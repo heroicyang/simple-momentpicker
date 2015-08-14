@@ -5,6 +5,7 @@ class MomentPicker extends SimpleModule
     list: ['year','%-',  'month', '%-', 'date', '%   ', 'hour', '%:', 'minute']
     el: null
     inline: false
+    allowClear: false
     valueFormat: 'YYYY-MM-DD HH:mm'
     displayFormat: 'LLLL'
     defaultView: 'auto'
@@ -68,7 +69,16 @@ class MomentPicker extends SimpleModule
 
     @input.val @date.format(@opts.displayFormat) if @el.val() isnt ''
 
-    @input.insertAfter @el
+    if @opts.allowClear
+      @inputWrap = $('<div/>').addClass('momentpicker-input-wrapper')
+        .css
+          'display': 'inline-block'
+        .append @input
+        .append '<span class="link-clear">&#10005;</span>'
+        .insertAfter @el
+    else
+      @input.insertAfter @el
+
     @el.hide()
 
   _renderViews: ->
@@ -99,6 +109,12 @@ class MomentPicker extends SimpleModule
       false
 
     return if @opts.inline
+
+    if @opts.allowClear
+      @inputWrap.find('.link-clear').on 'mousedown', =>
+        @el.val ''
+        @input.val ''
+
     @input.on "focus.momentpicker", =>
       @show()
 
@@ -179,7 +195,7 @@ class MomentPicker extends SimpleModule
 
   getDate: ->
     @date ||= moment(@el.val(), @opts.valueFormat) if @el.val()
-    if @date then @date.clone() else null 
+    if @date then @date.clone() else null
 
   show: ->
     @_setPosition() unless @opts.inline
@@ -212,7 +228,7 @@ class MomentPicker extends SimpleModule
     @picker = null
 
     unless @opts.inline
-      @input.remove()
+      if @opts.allowClear then @inputWrap.remove() else @input.remove()
       @el.show()
       $(document).off ".momentpicker-#{@id}"
 
@@ -253,4 +269,3 @@ momentpicker.time = (opts) ->
   , opts
 
   return new MomentPicker opts
-
